@@ -31,6 +31,7 @@ if __name__ == "__main__":
     languages = json.loads(language_data)
 
     listing = {}
+    search_index = []
 
     with open(args.filename, 'rb') as fh:
         reader = MARCReader(fh)
@@ -141,16 +142,26 @@ if __name__ == "__main__":
             # Get the control number and add the record to a master dict
             # mapping control numbers to titles.
             # This will be used for the index page.
-            control = record.get('001').value()
+            control = record.get('001').value().strip()
             listing[control] = values['title']
 
             # Write each individual catalogue record to its own file.
             with open(args.output + '/records/' + control + '.md', 'w') as out:
                 out.write(record_template.render(values))
 
+            # Add record to a searchable index.
+            search_index.append({
+                'id': control,
+                'title': values['title'],
+                'author': values['author'] if author else None,
+                'subjects': ', '.join(values['subjects'])
+                })
+
         # Write a master index of all the catalogue entries.
         # This is not particularly browsable by humans but is intended to allow
         # search engines to crawl and index the whole catalogue.
         with open(args.output + '/catalogue.md', 'w') as out:
             out.write(catalogue_template.render(listing=listing))
+        with open(args.output + '/index.json', 'w', encoding='utf-8') as out:
+            json.dump(search_index, out, ensure_ascii=False, indent=4)
 
