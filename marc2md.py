@@ -135,7 +135,10 @@ if __name__ == "__main__":
             # Currently notes fields are not differentiated.
             # Possible future feature to come back and separate these out,
             # e.g. summary, scope and content, etc.
-            values['notes'] = [note.format_field() for note in record.notes]
+            values['notes'] = []
+            for note in record.notes:
+                if not ((note.tag == '541' or note.tag == '561') and note.indicator1 == '0'):
+                    values['notes'].append(note.format_field())
 
             values['holdings'] = [holding.format_field() for holding in record.get_fields('852', '863')]
 
